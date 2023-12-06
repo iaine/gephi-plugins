@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-OpenIDE-Module-Name: Sonification
-OpenIDE-Module-Short-Description: Sonification Plugin
-OpenIDE-Module-Long-Description: Simple Sonification tools
-OpenIDE-Module-Display-Category: Preview
-OpenIDE-Module-Localizing-Bundle: uk/co/austgate/Bundle.properties
