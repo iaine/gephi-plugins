@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Name: Sonic Layout
+OpenIDE-Module-Short-Description: A sonic layout
+OpenIDE-Module-Long-Description: Sonifying the Lyout
+OpenIDE-Module-Display-Category: Layout
