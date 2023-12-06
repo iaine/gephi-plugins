@@ -18,6 +18,8 @@ import org.gephi.layout.spi.LayoutProperty;
 import org.openide.util.Exceptions;
 import org.gephi.statistics.plugin.Modularity;
 
+import uk.co.austgate.ToneGenerator;
+
 
 /**
  * Implements a simple sonic layout. 
@@ -37,7 +39,7 @@ public class SonicLayout implements Layout {
     private String sonifyEdgePath = "/Users/";
     private String sonifySounds = "Enter the source : sound ; ";
     
-    private HashMap<String, String> setTones = new HashMap<>();
+    private HashMap<String, String> setTones = new HashMap<String, String>();
     
     private ToneGenerator toneGenerator;
     
@@ -97,7 +99,17 @@ public class SonicLayout implements Layout {
                 System.out.println(edge.getSource().getLabel());
                 System.out.println(edge.getTarget().getLabel());
                 System.out.println(edge.getWeight());
-                PlayChuck playChuck = new PlayChuck();
+                try {
+                    toneGenerator.generateTone(0);
+                    Thread.sleep(100);
+                    Integer dur = Integer.valueOf(edge.getAttribute("weight").toString());
+                    toneGenerator.generateTone(dur);
+                } catch (InterruptedException ie) {
+                    System.out.print(ie.toString());
+                } catch (LineUnavailableException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+                /*PlayChuck playChuck = new PlayChuck();
                 if (!setTones.isEmpty()) {
                     String sound = setTones.get(edge.getSource().getLabel());
 
@@ -112,7 +124,7 @@ public class SonicLayout implements Layout {
                             System.out.println("Unsupported format " + sound);
                         
                     }
-                }
+                }*/
             }
         }
 
@@ -142,7 +154,7 @@ public class SonicLayout implements Layout {
 
     @Override
     public LayoutProperty[] getProperties() {
-        List<LayoutProperty> properties = new ArrayList<>();
+        List<LayoutProperty> properties = new ArrayList<LayoutProperty>();
         final String GRIDLAYOUT = "Sonic Layout";
 
         try {

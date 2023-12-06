@@ -22,7 +22,7 @@ public class ToneGenerator {
         this.stop = state;
     }
     //@todo: parameterise frequency and duration
-   public void generateTone(int freq) throws InterruptedException, LineUnavailableException  {
+   public void generateTone(int freq, int dur) throws InterruptedException, LineUnavailableException  {
        
        try {
            
@@ -54,7 +54,7 @@ public class ToneGenerator {
             // Make our buffer size match audio system's buffer
             ByteBuffer cBuf = ByteBuffer.allocate(line.getBufferSize());   
 
-            int ctSamplesTotal = SAMPLING_RATE*5;         // Output for roughly 5 seconds
+            int ctSamplesTotal = SAMPLING_RATE*(dur/10);         // Output for roughly 5 seconds
 
 
             //On each pass main loop fills the available free space in the audio buffer
@@ -95,6 +95,8 @@ public class ToneGenerator {
            System.out.println("Line Unavailable " + lue.toString());
        } catch (InterruptedException ie) {
            System.out.println("Interrupted " + ie.toString());
+       } catch (Exception e) {
+           System.out.println("StandardError " + e.toString());
        }
    }
 }
