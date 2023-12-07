@@ -25,9 +25,11 @@ public class PlayChuck {
      * @param chuckCommands 
      */
     public void playSound (String[] chuckCommands) {
+        //@todo: change this to be a variablr. Might be used on Windows.
       try {
-       
-        Runtime.getRuntime().exec(chuckCommands);
+       String[] command = { "/usr/bin/chuck ", };
+       //String[] c = (String[]) ArrayUtils.addAll(command, chuckCommands);
+        Runtime.getRuntime().exec(command);
       } catch (IOException ioe) {
             System.out.println("IOE " + ioe);
       }
