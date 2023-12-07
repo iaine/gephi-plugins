@@ -96,19 +96,8 @@ public class SonicLayout implements Layout {
 
             for (int i = 0; i < edges.length; i++) {
                 Edge edge = edges[i];
-                System.out.println(edge.getSource().getLabel());
-                System.out.println(edge.getTarget().getLabel());
-                System.out.println(edge.getWeight());
-                try {
-                    toneGenerator.generateTone(0);
-                    Thread.sleep(100);
-                    Integer dur = Integer.valueOf(edge.getAttribute("weight").toString());
-                    toneGenerator.generateTone(dur);
-                } catch (InterruptedException ie) {
-                    System.out.print(ie.toString());
-                } catch (LineUnavailableException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
+
+                this.sonifyData(232.25, edge);
                 /*PlayChuck playChuck = new PlayChuck();
                 if (!setTones.isEmpty()) {
                     String sound = setTones.get(edge.getSource().getLabel());
@@ -132,14 +121,41 @@ public class SonicLayout implements Layout {
         executing = false;
     }
     
-    private void sonifyData (int freq) {
-        try {
-            toneGenerator.generateTone(freq);
-        } catch (InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (LineUnavailableException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+    /**
+     * Function to call the tones. 
+     * @param freq
+     * @param edge 
+     */
+    private void sonifyData (Double freq, Edge edge) {
+
+            //final Runnable runnable = () -> {
+                try {
+                    //Integer dur = (Integer) edge.getAttribute("dist");
+                    Integer dur = findAttribute("dist", edge);
+                    //Integer blocks = (Integer) edge.getAttribute("num_blocks");
+                    Integer blocks = findAttribute("num_blocks", edge);
+                    if (blocks > 0) {
+                        Double cent = toneGenerator.createCent(freq, blocks);
+                        toneGenerator.generateTone(dur + cent, blocks, dur);
+                        //Thread.sleep(100);
+                    } else {
+                        toneGenerator.generateTone(freq, dur);
+                    }
+                } catch (InterruptedException | LineUnavailableException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+        //};
+    }
+    
+    /**
+     * Function to find an integer attribute in the graph
+     * 
+     * @param attr
+     * @param edge
+     * @return 
+     */
+    private Integer findAttribute(String attr, Edge edge) {
+        return (Integer) edge.getAttribute(attr);
     }
 
     @Override
@@ -178,10 +194,10 @@ public class SonicLayout implements Layout {
                     "getSoundPath", "setSoundPath"));  
             properties.add(LayoutProperty.createProperty(
                     this, HashMap.class,
-                    "Sound",
+                    "Sound Lay",
                     GRIDLAYOUT,
                     "Enter the Sounds in name:sound form. Must be a ChucK or Wav file.",
-                    "getSound", "setSound"));             
+                    "getSound", "setSoundMap"));             
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -199,7 +215,7 @@ public class SonicLayout implements Layout {
         this.graphModel = gm;
     }
     
-    private HashMap setSonificationSounds () {
+    private HashMap<String, String> setSonificationSounds () {
         setTones.clear();
         if (sonifySounds.contains(";")) {
             String[] patches = sonifySounds.split(";");
@@ -223,7 +239,11 @@ public class SonicLayout implements Layout {
     public void setSound (String sonifySounds) {
         this.sonifySounds = sonifySounds;      
     }
-    
+ 
+    public void setSoundMap (HashMap<String, String> sonifySound) {
+        //@todo check this method
+        this.setTones.putAll(sonifySound);     
+    }
     public String getSound () {
         return sonifySounds;
     }
