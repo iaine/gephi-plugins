@@ -7,6 +7,8 @@ package uk.co.austgate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.sound.sampled.LineUnavailableException;
 import org.gephi.graph.api.Graph;
 import org.gephi.graph.api.GraphModel;
@@ -96,8 +98,13 @@ public class SonicLayout implements Layout {
 
             for (int i = 0; i < edges.length; i++) {
                 Edge edge = edges[i];
-
-                this.sonifyData(232.25, edge);
+                
+                try {
+                    this.sonifyData(64.25, edge);
+                    Thread.sleep(1000);
+                } catch (InterruptedException ie) {
+                    
+                }
                 /*PlayChuck playChuck = new PlayChuck();
                 if (!setTones.isEmpty()) {
                     String sound = setTones.get(edge.getSource().getLabel());
@@ -128,8 +135,12 @@ public class SonicLayout implements Layout {
      */
     private void sonifyData (Double freq, Edge edge) {
 
-            //final Runnable runnable = () -> {
-                try {
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+
+            @Override 
+            public void run() {
+                 try {
+                     Thread.sleep(1000);
                     //Integer dur = (Integer) edge.getAttribute("dist");
                     Integer dur = findAttribute("dist", edge);
                     //Integer blocks = (Integer) edge.getAttribute("num_blocks");
@@ -137,14 +148,18 @@ public class SonicLayout implements Layout {
                     if (blocks > 0) {
                         Double cent = toneGenerator.createCent(freq, blocks);
                         toneGenerator.generateTone(dur + cent, blocks, dur);
-                        //Thread.sleep(100);
+                        //Thread.sleep(5);
                     } else {
                         toneGenerator.generateTone(freq, dur);
                     }
+                    Thread.sleep(1000);
+                    
                 } catch (InterruptedException | LineUnavailableException ex) {
                     Exceptions.printStackTrace(ex);
                 }
-        //};
+                
+            }
+        });
     }
     
     /**
