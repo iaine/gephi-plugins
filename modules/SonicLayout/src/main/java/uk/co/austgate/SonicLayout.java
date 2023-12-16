@@ -95,33 +95,39 @@ public class SonicLayout implements Layout {
             executing=false;
         } else {
             Edge[] edges = graph.getEdges().toArray();
+            
+            //track the internal state. If unpause and not renew, carry on. 
+            int track_i=0;
+            if (executing) {
 
-            for (int i = 0; i < edges.length; i++) {
-                Edge edge = edges[i];
-                
-                try {
-                    this.sonifyData(64.25, edge);
-                    Thread.sleep(1000);
-                } catch (InterruptedException ie) {
-                    
-                }
-                /*PlayChuck playChuck = new PlayChuck();
-                if (!setTones.isEmpty()) {
-                    String sound = setTones.get(edge.getSource().getLabel());
+            for (int i = track_i; i < edges.length; i++) {
+                    track_i = i;
+                    Edge edge = edges[i];
 
-                    switch (sound.split(".")[1]) {
-                        case "ck":
-                            playChuck.playSound();
-                            break;
-                        case "wav":
-                            playWav.playSound(sonifyEdgePath + "/" + sound);
-                            break;
-                        default:
-                            System.out.println("Unsupported format " + sound);
-                        
+                    try {
+                        this.sonifyData(64.25, edge);
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ie) {
+
                     }
-                }*/
-            }
+                    /*PlayChuck playChuck = new PlayChuck();
+                    if (!setTones.isEmpty()) {
+                        String sound = setTones.get(edge.getSource().getLabel());
+
+                        switch (sound.split(".")[1]) {
+                            case "ck":
+                                playChuck.playSound();
+                                break;
+                            case "wav":
+                                playWav.playSound(sonifyEdgePath + "/" + sound);
+                                break;
+                            default:
+                                System.out.println("Unsupported format " + sound);
+
+                        }
+                    }*/
+                }
+            }//executing
         }
 
         graph.readUnlock();
@@ -140,7 +146,7 @@ public class SonicLayout implements Layout {
             @Override 
             public void run() {
                  try {
-                     Thread.sleep(1000);
+
                     //Integer dur = (Integer) edge.getAttribute("dist");
                     Integer dur = findAttribute("dist", edge);
                     //Integer blocks = (Integer) edge.getAttribute("num_blocks");
@@ -152,7 +158,7 @@ public class SonicLayout implements Layout {
                     } else {
                         toneGenerator.generateTone(freq, dur);
                     }
-                    Thread.sleep(1000);
+
                     
                 } catch (InterruptedException | LineUnavailableException ex) {
                     Exceptions.printStackTrace(ex);
