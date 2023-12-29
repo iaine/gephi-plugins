@@ -106,16 +106,4 @@ public class ToneGenerator {
        }
    }
    
-   /**
-    * Function to create a simple cent. 
-    * @param base
-    * @param cents
-    * @return cent - an integer derived from the base frequency
-    */
-   public double createCent (double base, int cents) {
-       double cent;
-       //baseFreq * Math.pow(2, (cents/1200));
-       cent = base * Math.pow(2.0, (cents/1200));
-       return cent;
-   }
 }
