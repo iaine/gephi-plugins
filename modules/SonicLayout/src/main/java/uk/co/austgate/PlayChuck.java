@@ -8,10 +8,18 @@ import java.io.IOException;
 
 /**
  *
- * @author iain
+ * PlayChuck.
+ * 
+ * Class to play a ChucK file from the command line. 
+ * 
+ * @author Iain Emsley
  */
 public class PlayChuck {
     
+    /**
+     * filePath is the directory where ChucK is
+     *
+     */
     private static String filePath;
     
     protected void PlayChuck(String baseDir) {
@@ -38,7 +46,9 @@ public class PlayChuck {
     /**
      * Function to start a Chuck server. 
      * 
-     * We assume that it is in the ChucK directory. 
+     * We assume that it is in the ChucK directory.
+     * 
+     * This is a @todo to allow this to talk OSC. 
      * @param baseDir 
      */
     private void startChuck() {
