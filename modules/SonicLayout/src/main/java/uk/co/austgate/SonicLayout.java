@@ -139,7 +139,15 @@ public class SonicLayout implements Layout {
     }
     
     /**
-     * Function to call the tones. 
+     * sonifyData.
+     * 
+     * This function calls the sonification code. 
+     * 
+     * The function takes the basic tone and the current edge from the graph. 
+     * It finds the distance and the number of blocks to create additional tones
+     * if required. 
+     * 
+     * It runs in a separate thread or Gephi locks while it completes. 
      * @param freq
      * @param edge 
      */
@@ -151,14 +159,11 @@ public class SonicLayout implements Layout {
             public void run() {
                  try {
 
-                    //Integer dur = (Integer) edge.getAttribute("dist");
                     Integer dur = findAttribute("dist", edge);
-                    //Integer blocks = (Integer) edge.getAttribute("num_blocks");
                     Integer blocks = findAttribute("num_blocks", edge);
                     if (blocks > 0) {
                         Double cent = toneAlgorithms.createCent(freq, blocks);
                         toneGenerator.generateTone(dur + cent, blocks, dur);
-                        //Thread.sleep(5);
                     } else {
                         toneGenerator.generateTone(freq, dur);
                     }
