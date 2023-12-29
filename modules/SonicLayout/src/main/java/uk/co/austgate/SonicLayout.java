@@ -21,6 +21,7 @@ import org.openide.util.Exceptions;
 import org.gephi.statistics.plugin.Modularity;
 
 import uk.co.austgate.ToneGenerator;
+import uk.co.austgate.ToneAlgorithms;
 
 
 /**
@@ -45,6 +46,8 @@ public class SonicLayout implements Layout {
     
     private ToneGenerator toneGenerator;
     
+    private ToneAlgorithms toneAlgorithms;
+    
     private PlayWav playWav = new PlayWav();
 
     public SonicLayout(SonicLayoutBuilder builder) {
@@ -68,6 +71,7 @@ public class SonicLayout implements Layout {
     @Override
     public void goAlgo() {
         toneGenerator = new ToneGenerator();
+        toneAlgorithms = new ToneAlgorithms();
         Graph graph = graphModel.getGraphVisible();
         graph.readLock();
         
@@ -152,7 +156,7 @@ public class SonicLayout implements Layout {
                     //Integer blocks = (Integer) edge.getAttribute("num_blocks");
                     Integer blocks = findAttribute("num_blocks", edge);
                     if (blocks > 0) {
-                        Double cent = toneGenerator.createCent(freq, blocks);
+                        Double cent = toneAlgorithms.createCent(freq, blocks);
                         toneGenerator.generateTone(dur + cent, blocks, dur);
                         //Thread.sleep(5);
                     } else {
