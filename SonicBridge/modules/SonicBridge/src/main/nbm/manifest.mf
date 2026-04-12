@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Name: SonicBridge
+OpenIDE-Module-Short-Description: Test for SonicBridge
+OpenIDE-Module-Long-Description: Gephi plugin for Sonic Bridge
+OpenIDE-Module-Display-Category: Layout
