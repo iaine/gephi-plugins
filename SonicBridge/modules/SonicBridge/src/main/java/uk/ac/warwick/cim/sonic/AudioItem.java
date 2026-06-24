@@ -20,7 +20,7 @@ import processing.core.PConstants;
 import processing.core.PImage;
 
 /**
- * A Item that represents a image within the file system.
+ * A Item that represents an audio file within the file system.
  * <p>
  * Each instance of <code>AudioItem</code> represents a single Audio file. When
  * the file is loaded (using one of the methods) the image data is cached in
