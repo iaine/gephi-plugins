@@ -5,6 +5,7 @@
 package uk.ac.warwick.cim.AppStudies;
 
 import javax.swing.JPanel;
+import org.gephi.io.importer.spi.ImporterUI;
 /**
  *
  * @author iain
