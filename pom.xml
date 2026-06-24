@@ -12,6 +12,9 @@
     <!-- List of modules -->
     <modules>
         <!-- Add here the paths of all modules (e.g. <module>modules/MyModule</module>) -->
+        <module>modules/AudioPreview</module>
+        <module>mavenproject1</module>
+        <module>SonicBridge</module>
     </modules>
     
     <!-- Properties -->
