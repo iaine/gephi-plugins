@@ -1,125 +1,131 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package uk.ac.warwick.cim.AppStudies;
 
-import java.io.LineNumberReader;
+import java.io.BufferedReader;
 import java.io.Reader;
+import org.gephi.graph.api.TimeRepresentation;
 import org.gephi.io.importer.api.ContainerLoader;
 import org.gephi.io.importer.api.EdgeDirectionDefault;
-import org.gephi.io.importer.api.EdgeDraft;
-import org.gephi.io.importer.api.ImportUtils;
-import org.gephi.io.importer.api.NodeDraft;
 import org.gephi.io.importer.api.Report;
 import org.gephi.io.importer.spi.FileImporter;
-import org.json.*;
+import org.gephi.utils.longtask.spi.LongTask;
+import org.gephi.utils.progress.ProgressTicket;
+import org.json.JSONObject;
 
 /**
+ * Imports a single AppStudies .json or .jsonl file into a Gephi container.
+ *
+ * Time handling (the bit that makes the Timeline work):
+ *  - the container's TimeRepresentation is set to INTERVAL;
+ *  - every node/edge is given an existence interval [version, +inf);
+ *  - version is a double produced by {@link AppStudiesVersionMapper}.
+ *
+ * Because Gephi opens one Reader per file, this importer handles ONE file. To
+ * load a whole directory across versions, see the directory importer (which
+ * reuses {@link AppStudiesGraphBuilder}).
  *
  * @author iain
  */
-public class AppStudiesFileImporter implements FileImporter {
+public class AppStudiesFileImporter implements FileImporter, LongTask {
 
     private Reader reader;
     private ContainerLoader container;
     private Report report;
-    
+    private ProgressTicket progressTicket;
+    private boolean cancelled = false;
 
     @Override
     public void setReader(Reader reader) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        this.reader = reader;
     }
 
     @Override
-    public boolean execute(ContainerLoader cl) {
-
+    public boolean execute(ContainerLoader loader) {
+        this.container = loader;
         this.report = new Report();
-        LineNumberReader lineReader = ImportUtils.getTextReader(reader);
-        try {
-            //Set container as undirected
-            container.setEdgeDefault(EdgeDirectionDefault.DIRECTED);
 
-            //Import
-            importData(lineReader);
+        // Configure the container for a DIRECTED, dynamic (interval) graph.
+        container.setEdgeDefault(EdgeDirectionDefault.DIRECTED);
+        container.setTimeRepresentation(TimeRepresentation.INTERVAL);
+
+        AppStudiesGraphBuilder.declareColumns(container);
+
+        try (BufferedReader br = new BufferedReader(reader)) {
+            // Read the whole stream so we can support BOTH:
+            //  - a single pretty-printed JSON object spanning many lines, and
+            //  - JSONL: one compact JSON object per line.
+            StringBuilder all = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (cancelled) {
+                    return false;
+                }
+                all.append(line).append('\n');
+            }
+
+            String content = all.toString().trim();
+            if (content.isEmpty()) {
+                report.logIssue(new org.gephi.io.importer.api.Issue(
+                        "AppStudies: empty file",
+                        org.gephi.io.importer.api.Issue.Level.WARNING));
+                return true;
+            }
+
+            if (looksLikeSingleObject(content)) {
+                AppStudiesGraphBuilder.addDocument(container, new JSONObject(content), report);
+            } else {
+                // JSONL: parse line by line
+                for (String l : content.split("\\R")) {
+                    if (cancelled) {
+                        return false;
+                    }
+                    String trimmed = l.trim();
+                    if (!trimmed.isEmpty()) {
+                        AppStudiesGraphBuilder.addDocument(container, new JSONObject(trimmed), report);
+                    }
+                }
+            }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            report.logIssue(new org.gephi.io.importer.api.Issue(
+                    "AppStudies import failed: " + e.getMessage(),
+                    org.gephi.io.importer.api.Issue.Level.SEVERE));
+            return false;
         }
-        return true;
-    }
-    
-    private void importData(LineNumberReader reader) throws Exception {
-        String line = reader.readLine();
-        
-        ContainerLoader containerLoader = new ContainerLoader();
-        
-        // Create columns
-        containerLoader.getNodeTable().addColumn("start", Double.class);
-        containerLoader.getNodeTable().addColumn("end", Double.class);
-        containerLoader.getNodeTable().addColumn("version", String.class);
-        
-        
-        while ((line = reader.readLine()) != null) {
-            /**
-             * Major @todo: fix the different imports if they exist? 
-             */
-            JSONObject jsonObj = new JSONObject(line);
-            
-            
-            double t = AppStudiesVersionMapper.toDouble(ext.version);
-            
-            //check nodes using data
-            int node1Index = (Integer.valueOf(str[0].trim()));
-            int node2Index = (Integer.valueOf(str[1].trim()));
-            
-            //let's create a Node now
-            NodeDraft node1;
-            if (container.nodeExists(String.valueOf(node1Index))) {
-                node1 = container.getNode(String.valueOf(node1Index));
-            } else {
-                node1 = container.factory().newNodeDraft(String.valueOf(node1Index));
-                node1.setValue("start", t);
-                node1.setValue("end", t);
-                node1.setValue("version", t);
-                //Don't forget to add the node
-                container.addNode(node1);
-            }
 
-            NodeDraft node2;
-            if (container.nodeExists(String.valueOf(node2Index))) {
-                node2 = container.getNode(String.valueOf(node2Index));
-            } else {
-                node2 = container.factory().newNodeDraft(String.valueOf(node2Index));
-                node2.setValue("start", t);
-                node2.setValue("end", t);
-                node2.setValue("version", t);
-                //Don't forget to add the node
-                container.addNode(node2);
-            }
-            
-            //Create edge
-            EdgeDraft edgeDraft = container.factory().newEdgeDraft();
-            edgeDraft.setSource(node1);
-            edgeDraft.setTarget(node2);
-            //ignore weight for now
-            //edgeDraft.setWeight(weight);
-            container.addEdge(edgeDraft);
-        }
-        
-        
-        
-        
-        
+        return !cancelled;
     }
 
-    @Override
-    public ContainerLoader getContainer() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    /**
+     * A single JSON object that happens to contain newlines (pretty-printed)
+     * versus genuine JSONL. Heuristic: if the trimmed content starts with '{' and
+     * ends with '}' it is one object; JSONL files have multiple top-level objects
+     * so the last char of the first line is typically '}' too, but the whole file
+     * does not parse as one object. We try single-object first and fall back.
+     */
+    private boolean looksLikeSingleObject(String content) {
+        if (!(content.startsWith("{") && content.endsWith("}"))) {
+            return false;
+        }
+        try {
+            new JSONObject(content);
+            return true;
+        } catch (Exception ignore) {
+            return false;
+        }
     }
 
     @Override
     public Report getReport() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return report;
     }
-    
+
+    @Override
+    public boolean cancel() {
+        cancelled = true;
+        return true;
+    }
+
+    @Override
+    public void setProgressTicket(ProgressTicket progressTicket) {
+        this.progressTicket = progressTicket;
+    }
 }
