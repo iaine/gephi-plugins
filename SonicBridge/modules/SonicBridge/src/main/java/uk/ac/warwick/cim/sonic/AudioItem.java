@@ -23,14 +23,14 @@ import processing.core.PConstants;
 import processing.core.PImage;
 
 /**
- * An item that represents an audio file linked to a node.
+ * A Item that represents an audio file within the file system.
  * <p>
  * The {@code source} string is the audio filename (relative to the configured
  * audio directory, or absolute). Rendering draws a cassette glyph rather than
  * the audio bytes; playback is handled separately by {@link PlayAudioTool} /
  * {@link AudioPlayer}.
  *
- * @author Iain Emsley (SonicBridge)
+ * @author Iain Emsley 
  */
 public class AudioItem extends AbstractItem {
 
