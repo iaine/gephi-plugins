@@ -1,16 +1,19 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * SonicBridge - preview item for an audio-linked node.
+ *
+ * Unlike the Image Preview plugin (which loads each file as a bitmap), an
+ * audio file cannot be drawn directly. Instead every AudioItem renders a shared
+ * "cassette" icon, while the actual audio path is kept so PlayAudioTool can
+ * play it. The icon bitmap is loaded once from plugin resources and cached.
  */
 package uk.ac.warwick.cim.sonic;
-
 
 import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.Image;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -20,130 +23,110 @@ import processing.core.PConstants;
 import processing.core.PImage;
 
 /**
- * A Item that represents a image within the file system.
+ * An item that represents an audio file linked to a node.
  * <p>
- * Each instance of <code>AudioItem</code> represents a single Audio file. When
- * the file is loaded (using one of the methods) the image data is cached in
- * memory, allowing for faster rendering in the future.
- * <p>
- * In addition to the cached images, the item contains all the properties of
- * {@link NodeItem}.
+ * The {@code source} string is the audio filename (relative to the configured
+ * audio directory, or absolute). Rendering draws a cassette glyph rather than
+ * the audio bytes; playback is handled separately by {@link PlayAudioTool} /
+ * {@link AudioPlayer}.
  *
- * @author Iain
+ * @author Iain Emsley (SonicBridge)
  */
 public class AudioItem extends AbstractItem {
 
-    /**
-     * The identifier of this item.
-     */
     public static final String AUDIO = "Audio";
-
-    /**
-     * The data key for accessing the Processing image file within the cache.
-     */
     public static final String PROCESSING_DATA = "Processing_Data";
-
-    /**
-     * The data key for accessing the iText PDF image file within the cache.
-     */
     public static final String PDF_DATA = "PDF_Data";
+
+    /** Classpath location of the cassette icon used for every audio node. */
+    private static final String ICON_RESOURCE =
+            "/uk/ac/warwick/cim/sonic/resources/cassette.png";
 
     private static final Logger logger = Logger.getLogger(AudioItem.class.getName());
 
+    // Cassette icon shared across all items, loaded lazily once.
+    private static BufferedImage cachedIcon;
+    private static boolean iconLoadAttempted;
+
     /**
-     *
-     * @param source The image filename
+     * @param source the audio filename this node links to
      */
     public AudioItem(String source) {
         super(source, AUDIO);
     }
 
+    /** Load (once) and return the cassette icon, or null if unavailable. */
+    private static synchronized BufferedImage loadIcon() {
+        if (cachedIcon == null && !iconLoadAttempted) {
+            iconLoadAttempted = true;
+            URL url = AudioItem.class.getResource(ICON_RESOURCE);
+            if (url != null) {
+                try {
+                    cachedIcon = ImageIO.read(url);
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Unable to load cassette icon", e);
+                }
+            } else {
+                logger.log(Level.WARNING, "Cassette icon resource not found: {0}", ICON_RESOURCE);
+            }
+        }
+        return cachedIcon;
+    }
+
     /**
-     * Prepares this ImageItem to be rendered by the Processing target. Loading
-     * from the cache, if available. If the method is forced to load a image
-     * from the hard drive, it store it in the cache.
+     * Prepare the cassette icon as a Processing image, caching the result on
+     * this item for fast re-renders.
      *
-     * @param location_name The name of the folder to load images from.
-     * @param target The properties of the current rendering.
-     * @return A Processing image corresponding to this item.
+     * @param target the current render target (unused but kept for parity).
+     * @return a Processing image of the cassette, or null if unavailable.
      */
-    public PImage renderProcessing(File location_name, G2DTarget target) {
+    public PImage renderProcessing(G2DTarget target) {
         PImage image = (PImage) data.get(PROCESSING_DATA);
         if (image == null) {
-            if (source instanceof String) {
-                File full_file = new File(location_name, (String) source);
-                try {
-                    //if(target.getApplet() != null)
-                    //    image = target.getApplet().loadImage(full_file.getCanonicalPath());
-                    // else 
-                    //based on http://processing.org/discourse/beta/num_1234546778.html
-                    //http://forum.processing.org/topic/converting-bufferedimage-to-pimage
-                    BufferedImage im_plane;
-
-                    im_plane = ImageIO.read(full_file);
-                    image = new PImage(im_plane.getWidth(), im_plane.getHeight(), PConstants.ARGB);
-                    im_plane.getRGB(0, 0, image.width, image.height, image.pixels, 0, image.width);
-                    image.updatePixels();
-
-                } catch (java.io.IOException e) {
-                    logger.log(Level.SEVERE, "Unable to load image: " + full_file, e);
-                }
-            }
-
-            //If we can't render the image
-            if (image == null) {
-                logger.log(Level.WARNING, "Unable to load image: {0}", source);
+            BufferedImage icon = loadIcon();
+            if (icon == null) {
                 return null;
             }
-
+            image = new PImage(icon.getWidth(), icon.getHeight(), PConstants.ARGB);
+            icon.getRGB(0, 0, image.width, image.height, image.pixels, 0, image.width);
+            image.updatePixels();
             data.put(PROCESSING_DATA, image);
         }
         return image;
     }
 
     /**
-     * @param location_name The name of the folder to load images from.
-     * @return The attribute to be added to the SVG file to represent this
-     * image.
+     * @return classpath URL string of the cassette icon for SVG embedding.
      */
-    public String renderSVG(File location_name) {
-        return new File(location_name, (String) source).getAbsolutePath();
+    public String renderSVG() {
+        URL url = AudioItem.class.getResource(ICON_RESOURCE);
+        return url != null ? url.toString() : "";
     }
 
     /**
-     * Prepares this ImageItem to be rendered by the PDF target. Loading from
-     * the cache, if available. If the method is forced to load a image from the
-     * hard drive, it stores it in the cache.
+     * Prepare the cassette icon as an iText PDF image, cached on this item.
      *
-     * @param location_name The name of the folder to load images from.
-     * @return A iText PDF Image corresponding to this item.
+     * @return an iText image of the cassette, or null if unavailable.
      */
-    public com.itextpdf.text.Image renderPDF(File location_name) {
+    public com.itextpdf.text.Image renderPDF() {
         com.itextpdf.text.Image image = (com.itextpdf.text.Image) data.get(PDF_DATA);
         if (image == null) {
-            if (source instanceof String) {
-                File full_file = new File(location_name,(String) source);
-
-                try {
-                    image = Image.getInstance(full_file.getCanonicalPath());
-                } catch (BadElementException ex) {
-                    logger.log(Level.SEVERE, "Unable to load image: " + full_file, ex);
-                } catch (MalformedURLException ex) {
-                    logger.log(Level.SEVERE, "Unable to load image: " + full_file, ex);
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, "Unable to load image: " + full_file, ex);
-                }
-
-            }
-            //If we can't render the image, fallback to the defult render
-            if (image == null) {
-                logger.log(Level.WARNING, "Unable to load image: {0}", source);
+            URL url = AudioItem.class.getResource(ICON_RESOURCE);
+            if (url == null) {
                 return null;
             }
-
+            try {
+                image = Image.getInstance(url);
+            } catch (BadElementException | MalformedURLException ex) {
+                logger.log(Level.SEVERE, "Unable to load cassette icon for PDF", ex);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Unable to load cassette icon for PDF", ex);
+            }
+            if (image == null) {
+                return null;
+            }
             data.put(PDF_DATA, image);
         }
-
         return image;
     }
 }

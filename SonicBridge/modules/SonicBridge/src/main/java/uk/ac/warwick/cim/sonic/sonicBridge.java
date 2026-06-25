@@ -29,12 +29,16 @@ public class sonicBridge implements ItemBuilder {
     @Override
     public Item[] getItems(Graph graph) {
         
-        Item[] items = new AudioItem[graph.getNodeCount()];
-        
-        int i = 0;
+        java.util.List<AudioItem> built = new java.util.ArrayList<>();
+
         try {
             for (Node n : graph.getNodes()) {
-                AudioItem audioItem = new AudioItem((String)n.getAttribute("audio"));
+                Object attr = n.getAttribute("audio");
+                // Only build items for nodes that actually link to audio.
+                if (attr == null || attr.toString().trim().isEmpty()) {
+                    continue;
+                }
+                AudioItem audioItem = new AudioItem(attr.toString());
                 audioItem.setData(NodeItem.X, n.x());
                 audioItem.setData(NodeItem.Y, -n.y());
                 audioItem.setData(NodeItem.Z, n.z());
@@ -43,13 +47,13 @@ public class sonicBridge implements ItemBuilder {
                         (int) (n.g() * 255),
                         (int) (n.b() * 255),
                         (int) (n.alpha() * 255)));
-                items[i++] = audioItem;
+                built.add(audioItem);
             }
         } catch (Exception e){
-            items = new AudioItem[0];
+            built.clear();
             logger.log(Level.SEVERE,null,e);
         } 
-        return items;
+        return built.toArray(new AudioItem[0]);
         
     }
     
