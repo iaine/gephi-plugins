@@ -45,7 +45,8 @@ public class AppStudiesFileImporter implements FileImporter, LongTask {
 
         // Configure the container for a DIRECTED, dynamic (interval) graph.
         container.setEdgeDefault(EdgeDirectionDefault.DIRECTED);
-        container.setTimeRepresentation(TimeRepresentation.INTERVAL);
+        container.setTimeRepresentation(TimeRepresentation.TIMESTAMP); 
+        //container.setTimeRepresentation(TimeRepresentation.INTERVAL);
 
         AppStudiesGraphBuilder.declareColumns(container);
 
