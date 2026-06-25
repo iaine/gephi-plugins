@@ -47,6 +47,7 @@ public final class AppStudiesGraphBuilder {
         container.addNodeColumn("vendor", String.class);
         container.addNodeColumn("version", String.class);  // human-readable, e.g. "43.7.3"
         container.addEdgeColumn("relation", String.class); // "module->stage" | "link"
+        container.setTimeRepresentation(org.gephi.graph.api.TimeRepresentation.TIMESTAMP); //set to gephi Timestamp
     }
 
     /**
