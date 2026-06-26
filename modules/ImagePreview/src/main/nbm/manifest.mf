@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Name: Image Preview
+OpenIDE-Module-Short-Description: Image Preview Plugin
+OpenIDE-Module-Long-Description: Longer description
+OpenIDE-Module-Display-Category: Preview
