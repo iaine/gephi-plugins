@@ -36,4 +36,3 @@ public class AppStudiesVersionTimelineImporter implements Importer {
         return true;
     }
 }
-``
