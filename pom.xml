@@ -11,9 +11,8 @@
     
     <!-- List of modules -->
     <modules>
+    <module>modules/gephi-plugin-image-preview</module>
         <!-- Add here the paths of all modules (e.g. <module>modules/MyModule</module>) -->
-        <module>SonicBridge</module>
-        <module>modules/AppStudies</module>
     </modules>
     
     <!-- Properties -->
@@ -236,4 +235,3 @@
         </profile>
     </profiles>
 </project>
-
