@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        The parent is the root pom.xml of the gephi-plugins checkout, two
+        directories up (this module lives at modules/<plugin>/pom.xml).
+        It is NOT published to Maven Central, so Maven must find it on disk
+        via this relative path. If you see "Non-resolvable parent POM ...
+        could not be found in central", it means this module is being built
+        outside a gephi-plugins checkout, or the path below doesn't point at
+        the root pom.
+    -->
+    <parent>
+        <groupId>org.gephi</groupId>
+        <artifactId>gephi-plugins</artifactId>
+        <version>0.11.1</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <!-- Coordinates of the plugin itself.
+
+         groupId MUST be org.gephi (same as the parent). The gephi-plugins
+         root pom declares the Gephi application dependency as
+         <groupId>${project.groupId}</groupId> / <artifactId>gephi</artifactId>,
+         and that property re-evaluates in this module's context. If the
+         groupId here is anything else, Maven looks for
+         "<your-groupId>:gephi:tar.gz:linux-x64" and fails to resolve it.
+         The plugin's own identity is carried by the artifactId. -->
+    <groupId>org.gephi</groupId>
+    <artifactId>imagepreview</artifactId>
+    <version>1.1.0</version>
+    <packaging>nbm</packaging>
+
+    <name>gephi-plugin-image-preview</name>
+
+    <!--
+        Unlike the older gephi-plugin-parent (<= 0.10.0), the current
+        gephi-plugins root pom (0.11.x) does NOT provide a
+        <dependencyManagement> section, so every dependency must carry an
+        explicit <version>.
+
+        - Gephi modules track the Gephi release: gephi.version is inherited
+          from the root pom (0.11.1).
+        - NetBeans platform modules use the NetBeans Platform release that
+          Gephi 0.11.1 is built on, which is NB Platform 29 => RELEASE290.
+          If you bump Gephi, bump netbeans.version to the matching platform.
+    -->
+    <properties>
+        <netbeans.version>RELEASE290</netbeans.version>
+    </properties>
+
+    <dependencies>
+        <!-- Gephi modules -->
+        <dependency>
+            <groupId>org.gephi</groupId>
+            <artifactId>graph-api</artifactId>
+            <version>${gephi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gephi</groupId>
+            <artifactId>preview-api</artifactId>
+            <version>${gephi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gephi</groupId>
+            <artifactId>preview-plugin</artifactId>
+            <version>${gephi.version}</version>
+        </dependency>
+        <!-- Brings in Apache PDFBox (org.apache.pdfbox.*) used by the PDF
+             preview target. PDFBox 3.x is bundled and re-exported here. -->
+        <dependency>
+            <groupId>org.gephi</groupId>
+            <artifactId>core-library-wrapper</artifactId>
+            <version>${gephi.version}</version>
+        </dependency>
+
+        <!-- NetBeans platform modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+            <version>${netbeans.version}</version>
+        </dependency>
+
+        <!-- Test-only dependencies -->
+        <!--
+            NbJUnit pulls in JUnit 4 and the NetBeans test harness. Tests
+            placed under src/test/java are compiled and executed automatically
+            by Surefire during 'mvn test' / 'mvn package'.
+        -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-nbjunit</artifactId>
+            <version>${netbeans.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                Only ADD configuration to the nbm-maven-plugin here. The plugin
+                version, <extensions>true</extensions> (which activates the 'nbm'
+                packaging lifecycle) and the 'cluster' execution binding are all
+                inherited from the gephi-plugins root pom's <pluginManagement>
+                and <build>. Re-declaring <extensions> or executions here can
+                stop the reactor's cluster goal from finding this module's nbm
+                output, producing "NetBeans binary directory structure ... is
+                not created yet".
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                    <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+                </plugin>
+            <plugin>
+                <groupId>org.apache.netbeans.utilities</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <author>Yitzchak Lockerman (Yale Computer Graphics Group)</author>
+                    <licenseName>GPL 3.0</licenseName>
+                    <sourceCodeUrl>https://github.com/totetmatt/gephi-plugins/tree/image-preview</sourceCodeUrl>
+                    <publicPackages>
+                        <publicPackage>org.yale.cs.graphics.gephi.imagepreview</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
