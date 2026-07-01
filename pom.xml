@@ -11,6 +11,7 @@
     
     <!-- List of modules -->
     <modules>
+    <module>modules/ImagePreview</module>
         <!-- Add here the paths of all modules (e.g. <module>modules/MyModule</module>) -->
         <!--<module>SonicBridge</module>-->
         <module>modules/ImagePreview</module>
@@ -236,4 +237,3 @@
         </profile>
     </profiles>
 </project>
-
